@@ -1,0 +1,11 @@
+# Folders
+node_modules/
+dist/
+uploads/
+
+# Environment
+.env
+
+# OS Files
+.DS_Store
+Thumbs.db
