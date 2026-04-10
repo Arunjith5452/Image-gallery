@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 import { TYPES } from '../types';
 import { IImageService } from './interfaces/IImageService';
 import { IImageRepository } from '../repositories/interfaces/IImageRepository';
-import path from 'path';
-import fs from 'fs';
 import { IImage } from '../models/Image';
 import { UpdateQuery } from 'mongoose';
+import { cloudinary } from '../config/cloudinary';
+import { UploadApiResponse } from 'cloudinary';
 
 @injectable()
 export class ImageService implements IImageService {
@@ -28,18 +28,33 @@ export class ImageService implements IImageService {
     let currentOrder = await this.imageRepository.findHighestOrderForUser(userId);
     currentOrder = currentOrder !== -1 ? currentOrder + 1 : 0;
 
-    const imageDocs = files.map((file) => {
-      const doc = {
+    const uploadPromises = files.map(async (file) => {
+      const result: UploadApiResponse = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'image-gallery',
+            public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result as UploadApiResponse);
+          }
+        );
+        uploadStream.end(file.buffer);
+      });
+
+      return {
         title: titlesMap[file.originalname] || file.originalname.split('.')[0],
-        filename: file.filename,
+        cloudinaryPublicId: result.public_id,
+        imageUrl: result.secure_url,
         mimetype: file.mimetype,
-        order: currentOrder,
+        order: currentOrder++,
         user: new mongoose.Types.ObjectId(userId),
       };
-      currentOrder++;
-      return doc;
     });
 
+    const imageDocs = await Promise.all(uploadPromises);
     const createdImages = await this.imageRepository.bulkCreate(imageDocs);
     return createdImages;
   }
@@ -59,11 +74,25 @@ export class ImageService implements IImageService {
     if (title) updateData.title = title;
 
     if (newFile) {
-      const oldPath = path.join(__dirname, '../uploads', image.filename);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
-      updateData.filename = newFile.filename;
+      await cloudinary.uploader.destroy(image.cloudinaryPublicId);
+
+      const result: UploadApiResponse = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'image-gallery',
+            public_id: image.cloudinaryPublicId,
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result as UploadApiResponse);
+          }
+        );
+        uploadStream.end(newFile.buffer);
+      });
+
+      updateData.cloudinaryPublicId = result.public_id;
+      updateData.imageUrl = result.secure_url;
       updateData.mimetype = newFile.mimetype;
     }
 
@@ -82,10 +111,7 @@ export class ImageService implements IImageService {
       throw new Error('User not authorized');
     }
 
-    const filePath = path.join(__dirname, '../uploads', image.filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    await cloudinary.uploader.destroy(image.cloudinaryPublicId);
 
     await this.imageRepository.deleteById(id);
   }

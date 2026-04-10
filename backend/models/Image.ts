@@ -3,7 +3,8 @@ import { IUser } from './User';
 
 export interface IImage extends Document {
   title: string;
-  filename: string;
+  cloudinaryPublicId: string;
+  imageUrl: string;
   mimetype?: string;
   order: number;
   user: mongoose.Types.ObjectId | IUser;
@@ -17,7 +18,11 @@ const imageSchema = new Schema<IImage>({
     required: [true, 'Title is required'],
     trim: true,
   },
-  filename: {
+  cloudinaryPublicId: {
+    type: String,
+    required: true,
+  },
+  imageUrl: {
     type: String,
     required: true,
   },

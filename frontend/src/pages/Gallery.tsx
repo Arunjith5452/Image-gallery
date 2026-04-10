@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 import { Pencil, Trash2, Upload, X, Save } from 'lucide-react';
 import {
   DndContext,
@@ -19,16 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-axios.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-  return config;
-});
-
 const API_URL = 'http://localhost:5000/api/images';
-const UPLOADS_URL = 'http://localhost:5000/uploads';
 
 const SortableImageCard = ({ image, onEdit, onDelete }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: image._id });
@@ -41,7 +32,7 @@ const SortableImageCard = ({ image, onEdit, onDelete }: any) => {
   return (
     <div ref={setNodeRef} style={style} className="image-card" {...attributes} {...listeners}>
       <div className="image-container">
-        <img src={`${UPLOADS_URL}/${image.filename}`} alt={image.title} />
+        <img src={image.imageUrl} alt={image.title} />
       </div>
       <div className="image-info">
         <span className="image-title">{image.title}</span>
@@ -77,7 +68,7 @@ const Gallery: React.FC = () => {
 
   const fetchImages = async () => {
     try {
-      const { data } = await axios.get(API_URL);
+      const { data } = await api.get(API_URL);
       setImages(data);
     } catch (err) {
       console.error('Failed to fetch images', err);
@@ -99,7 +90,7 @@ const Gallery: React.FC = () => {
           order: index
         }));
 
-        axios.put(`${API_URL}/reorder`, { items: reorderPayload })
+        api.put(`${API_URL}/reorder`, { items: reorderPayload })
           .catch(err => console.error('Failed to save order', err));
 
         return newItems;
@@ -130,7 +121,7 @@ const Gallery: React.FC = () => {
     formData.append('titles', JSON.stringify(titles));
 
     try {
-      await axios.post(`${API_URL}/bulk`, formData, {
+      await api.post(`${API_URL}/bulk`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setIsUploadOpen(false);
@@ -159,7 +150,7 @@ const Gallery: React.FC = () => {
     }
 
     try {
-      await axios.put(`${API_URL}/${editingImage._id}`, formData, {
+      await api.put(`${API_URL}/${editingImage._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setIsEditOpen(false);
@@ -172,7 +163,7 @@ const Gallery: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this image?')) {
       try {
-        await axios.delete(`${API_URL}/${id}`);
+        await api.delete(`${API_URL}/${id}`);
         setImages(images.filter(img => img._id !== id));
       } catch (err) {
         console.error('Delete failed', err);
