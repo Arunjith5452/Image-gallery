@@ -6,18 +6,54 @@ const ResetPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const validateForm = (): string | null => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[+]?[0-9]{10,15}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+
+    if (!email.trim()) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    
+    if (!phone.trim()) return 'Phone number is required';
+    if (!phoneRegex.test(phone)) return 'Phone number must be 10-15 digits (optional + at start)';
+    
+    if (!newPassword) return 'New password is required';
+    if (newPassword.length < 8) return 'Password must be at least 8 characters long';
+    if (!passwordRegex.test(newPassword)) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+    
+    if (newPassword !== confirmPassword) return 'Passwords do not match';
+    
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setLoading(true);
     try {
       await axios.post('http://localhost:5000/api/auth/reset-password', { email, phone, newPassword });
       setSuccess(true);
+      setError('');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,10 +96,24 @@ const ResetPassword: React.FC = () => {
                 value={newPassword} 
                 onChange={e => setNewPassword(e.target.value)} 
                 required
-                minLength={6}
+                minLength={8}
+                placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
               />
             </div>
-            <button type="submit" className="btn btn-primary">Reset Password</button>
+            <div className="form-group">
+              <label>Confirm New Password</label>
+              <input 
+                type="password" 
+                className="form-control" 
+                value={confirmPassword} 
+                onChange={e => setConfirmPassword(e.target.value)} 
+                required
+                minLength={8}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </button>
           </form>
         )}
         

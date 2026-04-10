@@ -7,17 +7,40 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const validateForm = (): string | null => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email.trim()) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    
+    if (!password) return 'Password is required';
+    
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setLoading(true);
     try {
       const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       login(data, data.token);
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +73,9 @@ const Login: React.FC = () => {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary">Sign In</button>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
         </form>
         
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>

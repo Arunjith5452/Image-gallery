@@ -7,18 +7,58 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const validateForm = (): string | null => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[+]?[0-9]{10,15}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+
+    if (!email.trim()) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    
+    if (!phone.trim()) return 'Phone number is required';
+    if (!phoneRegex.test(phone)) return 'Phone number must be 10-15 digits (optional + at start)';
+    
+    if (!password) return 'Password is required';
+    if (password.length < 8) return 'Password must be at least 8 characters long';
+    if (!passwordRegex.test(password)) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+    
+    if (password !== confirmPassword) return 'Passwords do not match';
+    
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setLoading(true);
     try {
       const { data } = await axios.post('http://localhost:5000/api/auth/register', { email, phone, password });
-      login(data, data.token);
-      navigate('/');
+      setError('');
+      if (data.token) {
+        login(data, data.token);
+        navigate('/');
+      } else {
+        navigate('/login');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to register');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,10 +99,24 @@ const Register: React.FC = () => {
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               required
-              minLength={6}
+              minLength={8}
+              placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
             />
           </div>
-          <button type="submit" className="btn btn-primary">Sign Up</button>
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input 
+              type="password" 
+              className="form-control" 
+              value={confirmPassword} 
+              onChange={e => setConfirmPassword(e.target.value)} 
+              required
+              minLength={8}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Registering...' : 'Sign Up'}
+          </button>
         </form>
         
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
