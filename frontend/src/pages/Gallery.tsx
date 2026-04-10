@@ -128,16 +128,18 @@ const Gallery: React.FC = () => {
     formData.append('titles', JSON.stringify(titles));
 
     try {
-      await api.post(`${API_URL}/bulk`, formData, {
+      const { data } = await api.post(`${API_URL}/bulk`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
+      setImages(prev => [...prev, ...data]);
       setIsUploadOpen(false);
       setSelectedFiles([]);
       setPreviews([]);
       setTitles({});
-      fetchImages();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload failed', err);
+      alert(err.response?.data?.message || 'Upload failed. Please try again.');
     }
   };
 
@@ -173,13 +175,18 @@ const Gallery: React.FC = () => {
     }
 
     try {
-      await api.put(`${API_URL}/${editingImage._id}`, formData, {
+      const { data } = await api.put(`${API_URL}/${editingImage._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
+      setImages(prev => prev.map(img => img._id === editingImage._id ? data : img));
       setIsEditOpen(false);
-      fetchImages();
-    } catch (err) {
+      setEditingImage(null);
+      setEditTitle('');
+      setEditFile(null);
+    } catch (err: any) {
       console.error('Edit failed', err);
+      alert(err.response?.data?.message || 'Edit failed. Please try again.');
     }
   };
 
@@ -187,9 +194,10 @@ const Gallery: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this image?')) {
       try {
         await api.delete(`${API_URL}/${id}`);
-        setImages(images.filter(img => img._id !== id));
-      } catch (err) {
+        setImages(prev => prev.filter(img => img._id !== id));
+      } catch (err: any) {
         console.error('Delete failed', err);
+        alert(err.response?.data?.message || 'Delete failed. Please try again.');
       }
     }
   };
