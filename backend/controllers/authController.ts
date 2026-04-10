@@ -51,4 +51,43 @@ export class AuthController {
       }
     }
   };
+
+  verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const token = String(req.params.token);
+      const data = await this.authService.verifyEmail(token);
+      res.status(HttpStatus.OK).json(data);
+    } catch (error: any) {
+      if (error.message === 'Invalid or expired verification token') {
+        next(new AppError(error.message, HttpStatus.BAD_REQUEST));
+      } else {
+        next(error);
+      }
+    }
+  };
+
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { email } = req.body;
+      const data = await this.authService.forgotPassword(email);
+      res.status(HttpStatus.OK).json(data);
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  resetPasswordWithToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const token = String(req.params.token);
+      const { newPassword } = req.body;
+      const data = await this.authService.resetPasswordWithToken(token, newPassword);
+      res.status(HttpStatus.OK).json(data);
+    } catch (error: any) {
+      if (error.message === 'Invalid or expired reset token') {
+        next(new AppError(error.message, HttpStatus.BAD_REQUEST));
+      } else {
+        next(error);
+      }
+    }
+  };
 }

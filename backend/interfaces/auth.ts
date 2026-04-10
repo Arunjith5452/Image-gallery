@@ -20,4 +20,5 @@ export interface AuthResponse {
   email: string;
   phone: string;
   token: string;
+  message?: string;
 }

@@ -14,5 +14,8 @@ const authController = container.get<AuthController>(TYPES.AuthController);
 router.post('/register', validateDto(RegisterDto), authController.registerUser);
 router.post('/login', validateDto(LoginDto), authController.loginUser);
 router.post('/reset-password', validateDto(ResetPasswordDto), authController.resetPassword);
+router.get('/verify-email/:token', authController.verifyEmail);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password/:token', authController.resetPasswordWithToken);
 
 export default router;
