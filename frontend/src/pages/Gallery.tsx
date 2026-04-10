@@ -51,6 +51,7 @@ const Gallery: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [toasts, setToasts] = useState<Array<{id: string, message: string, type: 'success' | 'error' | 'info'}>>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{id: string, message: string, onConfirm: () => void, title?: string} | null>(null);
 
   const [selectedFiles, setSelectedFiles] = useState<Array<{file: File, preview: string}>>([]);
   const [titles, setTitles] = useState<Record<string, string>>({});
@@ -71,6 +72,19 @@ const Gallery: React.FC = () => {
 
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
+  const showConfirm = (message: string, onConfirm: () => void, title?: string) => {
+    setConfirmDialog({
+      id: Date.now().toString(),
+      message,
+      onConfirm,
+      title
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmDialog(null);
   };
 
   useEffect(() => {
@@ -201,21 +215,25 @@ const Gallery: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this image?')) {
-      try {
-        await api.delete(`${API_URL}/${id}`);
-        setImages(prev => prev.filter(img => img._id !== id));
-        addToast('Image deleted successfully!', 'success');
-      } catch (err: any) {
-        console.error('Delete failed', err);
-        addToast(err.response?.data?.message || 'Delete failed. Please try again.', 'error');
-      }
-    }
+    showConfirm(
+      'Are you sure you want to delete this image? This action cannot be undone.',
+      async () => {
+        try {
+          await api.delete(`${API_URL}/${id}`);
+          setImages(prev => prev.filter(img => img._id !== id));
+          addToast('Image deleted successfully!', 'success');
+        } catch (err: any) {
+          console.error('Delete failed', err);
+          addToast(err.response?.data?.message || 'Delete failed. Please try again.', 'error');
+        }
+      },
+      'Delete Image'
+    );
   };
 
   return (
     <div className="gallery-container">
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} removeToast={removeToast} confirmDialog={confirmDialog} closeConfirm={closeConfirm} />
       <div className="gallery-header">
         <h2>My Gallery</h2>
         <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setIsUploadOpen(true)}>
