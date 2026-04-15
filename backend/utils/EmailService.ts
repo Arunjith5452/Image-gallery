@@ -1,25 +1,32 @@
 import nodemailer from 'nodemailer';
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private createTransporter(): nodemailer.Transporter {
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
+    if (!emailUser || !emailPass) {
+      throw new Error('Email configuration is missing. Check EMAIL_USER and EMAIL_PASS in backend/.env');
+    }
+
+    return nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
+      port: parseInt(process.env.EMAIL_PORT || '587', 10),
       secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
     });
   }
 
   async sendVerificationEmail(email: string, verificationToken: string): Promise<void> {
+    const transporter = this.createTransporter();
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email/${verificationToken}`;
+    const fromEmail = process.env.EMAIL_USER as string;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: fromEmail,
       to: email,
       subject: 'Verify Your Email - ImageGallery',
       html: `
@@ -39,14 +46,16 @@ class EmailService {
       `,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
+    const transporter = this.createTransporter();
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const fromEmail = process.env.EMAIL_USER as string;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: fromEmail,
       to: email,
       subject: 'Reset Your Password - ImageGallery',
       html: `
@@ -66,7 +75,7 @@ class EmailService {
       `,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
   }
 }
 

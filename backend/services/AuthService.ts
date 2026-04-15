@@ -60,7 +60,6 @@ export class AuthService implements IAuthService {
         _id: user._id.toString(),
         email: user.email,
         phone: user.phone,
-        token: this.generateToken(user._id.toString()),
         message: 'Registration successful! Please check your email to verify your account.',
       };
     } else {

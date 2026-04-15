@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { ToastContainer } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
 
@@ -14,7 +13,6 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<Array<{id: string, message: string, type: 'success' | 'error' | 'info'}>>([]);
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const addToast = (message: string, type: 'success' | 'error' | 'info') => {
     const id = Date.now().toString();
@@ -59,16 +57,10 @@ const Register: React.FC = () => {
     
     setLoading(true);
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/register', { email, phone, password });
+      await axios.post('http://localhost:5000/api/auth/register', { email, phone, password });
       setError('');
-      if (data.token) {
-        login(data, data.token);
-        addToast('Registration successful! Welcome to ImageGallery.', 'success');
-        setTimeout(() => navigate('/'), 500);
-      } else {
-        addToast('Registration successful! Please check your email.', 'success');
-        setTimeout(() => navigate('/login'), 1500);
-      }
+      addToast('Registration successful! Please verify your email before logging in.', 'success');
+      setTimeout(() => navigate('/login'), 1500);
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Failed to register';
       setError(errorMsg);
@@ -114,7 +106,7 @@ const Register: React.FC = () => {
             label="Password"
             required
             minLength={8}
-            placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
+            hint="Use at least 8 characters with 1 uppercase letter, 1 lowercase letter, and 1 number."
           />
           <PasswordInput 
             value={confirmPassword}

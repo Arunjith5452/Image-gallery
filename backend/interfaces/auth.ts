@@ -19,6 +19,6 @@ export interface AuthResponse {
   _id: string;
   email: string;
   phone: string;
-  token: string;
+  token?: string;
   message?: string;
 }

@@ -5,6 +5,7 @@ interface PasswordInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
+  hint?: string;
   required?: boolean;
   minLength?: number;
   label: string;
@@ -14,6 +15,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
   onChange,
   placeholder,
+  hint,
   required,
   minLength,
   label
@@ -55,6 +57,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </button>
       </div>
+      {hint && <p className="form-hint">{hint}</p>}
     </div>
   );
 };

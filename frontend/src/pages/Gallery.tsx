@@ -154,9 +154,7 @@ const Gallery: React.FC = () => {
     formData.append('titles', JSON.stringify(titles));
 
     try {
-      const { data } = await api.post(`${API_URL}/bulk`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const { data } = await api.post(`${API_URL}/bulk`, formData);
       
       setImages(prev => [...prev, ...data]);
       setIsUploadOpen(false);
@@ -198,9 +196,7 @@ const Gallery: React.FC = () => {
     }
 
     try {
-      const { data } = await api.put(`${API_URL}/${editingImage._id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const { data } = await api.put(`${API_URL}/${editingImage._id}`, formData);
       
       setImages(prev => prev.map(img => img._id === editingImage._id ? data : img));
       setIsEditOpen(false);

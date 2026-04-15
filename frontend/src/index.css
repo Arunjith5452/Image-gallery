@@ -90,6 +90,13 @@ a:hover {
   color: var(--text-secondary);
 }
 
+.form-hint {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;

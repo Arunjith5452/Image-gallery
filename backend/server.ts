@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import 'reflect-metadata';
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import path from 'path';
@@ -8,8 +10,6 @@ import path from 'path';
 import authRoutes from './routes/authRoutes';
 import imageRoutes from './routes/imageRoutes';
 import { errorHandler } from './middleware/errorMiddleware';
-
-dotenv.config();
 
 const app = express();
 
