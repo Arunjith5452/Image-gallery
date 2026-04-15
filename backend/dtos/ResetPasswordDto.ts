@@ -21,3 +21,4 @@ export class ResetPasswordDto {
   })
   newPassword!: string;
 }
+// Casting due to mongoose typing inconsistencies with insertMany returning mongoose documents
