@@ -5,5 +5,5 @@ import User, { IUser } from '../models/User';
 
 @injectable()
 export class UserRepository extends BaseRepository<IUser> implements IUserRepository {
-  protected model = User;
+  protected _model = User;
 }

@@ -5,29 +5,29 @@ import Image, { IImage } from '../models/Image';
 
 @injectable()
 export class ImageRepository extends BaseRepository<IImage> implements IImageRepository {
-  protected model = Image;
+  protected _model = Image;
 
   async findUserImages(userId: string): Promise<IImage[]> {
-    return this.model.find({ user: userId }).sort({ order: 1, createdAt: -1 }).exec();
+    return this._model.find({ user: userId }).sort({ order: 1, createdAt: -1 }).exec();
   }
 
-  async bulkCreate(images: Partial<IImage>[]): Promise<IImage[]> {
-    return this.model.insertMany(images) as unknown as IImage[]; // Casting due to mongoose typing inconsistencies with insertMany returning mongoose documents
+  async bulkCreate(imagesList: Partial<IImage>[]): Promise<IImage[]> {
+    return this._model.insertMany(imagesList) as unknown as IImage[];
   }
 
-  async bulkUpdateOrder(items: { id: string; order: number; userId: string }[]): Promise<void> {
-    const bulkOps = items.map((item) => ({
+  async bulkUpdateOrder(reorderItems: { id: string; order: number; userId: string }[]): Promise<void> {
+    const bulkOperations = reorderItems.map((item) => ({
       updateOne: {
         filter: { _id: item.id, user: item.userId },
         update: { order: item.order },
       },
     }));
 
-    await this.model.bulkWrite(bulkOps);
+    await this._model.bulkWrite(bulkOperations);
   }
 
   async findHighestOrderForUser(userId: string): Promise<number> {
-    const lastImage = await this.model.findOne({ user: userId }).sort({ order: -1 }).exec();
-    return lastImage && lastImage.order !== undefined ? lastImage.order : -1;
+    const highestOrderedImage = await this._model.findOne({ user: userId }).sort({ order: -1 }).exec();
+    return highestOrderedImage && highestOrderedImage.order !== undefined ? highestOrderedImage.order : -1;
   }
 }
