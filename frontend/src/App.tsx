@@ -15,7 +15,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   if (!user) return null;
-  
+
   return (
     <nav style={{ padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>ImageGallery</h1>
@@ -37,13 +37,13 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <PrivateRoute>
                 <Gallery />
               </PrivateRoute>
-            } 
+            }
           />
         </Routes>
       </Router>
